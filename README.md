@@ -26,6 +26,8 @@ The first feature we hope to implement will be individual datasets mapped over t
 
 The second feature would be zoom-in features. The user should be able to click on a state and this will zoom into the desired state. The state will be more detailed with county lines. Big cities will be marked on the map.
 
+The third feature will be a parallel coordinates graph under the map with data from the current time from all three datasets. If the map view is the entire United States, then the data for the parallel coordinates will be from the entire US. If the user is zoomed into the state, then the parallel coordinates graph will only feature data from the state. In addition, the user can also click on major cities, and this city's data will be reflected in the PC graph.
+
 ## Optional Features
 
 ## Project Schedule
