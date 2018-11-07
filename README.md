@@ -41,8 +41,11 @@ Deadline:
 * December 7: Clean up and add optional features
 
 ## Visualization Design
+US Overivew:
 ![US Overview](Images/visualization_design_overview.jpg)
 
+US Multiview:
 ![US Multiview](Images/visualization_design_multiview.jpg)
 
+US Stateview:
 ![US Stateview](Images/visualization_design_stateview.jpg)
