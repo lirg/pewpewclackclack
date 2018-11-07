@@ -41,4 +41,4 @@ Deadline:
 * December 7: Clean up and add optional features
 
 ## Visualization Design
-![US Overview](images/visualization_design.png)
+![US Overview](images/visualization_design.jpg)
