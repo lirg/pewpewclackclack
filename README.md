@@ -13,7 +13,19 @@ We want to examine different gun violence trends over time and across the United
 We are aggregating three different data sources - [mass shootings](https://www.kaggle.com/jlmontie/stanford-msa-2017/home), [fatal police shootings](https://www.kaggle.com/kwullum/fatal-police-shootings-in-the-us), and [general gun violence](https://www.kaggle.com/jameslko/gun-violence-data). These datasets were gathered through public datasets.
 
 ## Data Processing
+We will display the data on a Choropleth map using map data (.shp) from the [US Census](https://www.census.gov/geo/maps-data/data/tiger-cart-boundary.html) that has been converted to JSON for use in our project.
+
+Since we are aggregating data from three different sources, some data processing will need to be completed in order to ensure our visualization displays consistent data (e.g. consistent location data elements). Data is already organized in `.csv` files so we suspect  filtering out the data elements of interest from all three sources will be a fairly straightforward process. 
+
+Furthermore, we would like to explore the possibility of extrapolating data from our original sources. In particular, we would like to derive density as an estimation. This could add some nice features such as clustering which we will mention further in the next section.
+
+Overall, we hope to complete data processing well within a week. 
+
 ## Must-Have Features
+
+
 ## Optional Features
+
 ## Project Schedule
+
 ## Visualization Design
