@@ -10,6 +10,8 @@ It seems like mass shootings and police brutality are increasingly occurring on 
 We want to examine different gun violence trends over time and across the United States. We want to create a UI that'll be user-friendly and effective. We hope to be able to see some surprising relationships or even surprising non-relationships.
 
 ## Data
+We are aggregating three different data sources - [mass shootings](https://www.kaggle.com/jlmontie/stanford-msa-2017/home), [fatal police shootings](https://www.kaggle.com/kwullum/fatal-police-shootings-in-the-us), and [general gun violence](https://www.kaggle.com/jameslko/gun-violence-data). These datasets were gathered through public datasets.
+
 ## Data Processing
 ## Must-Have Features
 ## Optional Features
