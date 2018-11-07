@@ -29,7 +29,15 @@ The second feature would be zoom-in features. The user should be able to click o
 The third feature will be a parallel coordinates graph under the map with data from the current time from all three datasets. If the map view is the entire United States, then the data for the parallel coordinates will be from the entire US. If the user is zoomed into the state, then the parallel coordinates graph will only feature data from the state. In addition, the user can also click on major cities, and this city's data will be reflected in the PC graph.
 
 ## Optional Features
+Currently, our design plan forces the user to continuously use the time slider in order to see trends over time. We think that adding a third graph somewhere that shows the entire timeline would be beneficial. This could be a line graph that graphs each dataset as a line and has the x-axis as time. This way, the user can see the overall changes that occur over time at once.
+
+Another feature we would like to add is the ability to preview a state before clicking on it. Say the user hovers over the state of Tennessee, then there should be a preview window that pops up that shows a smaller version of what they would see before clicking. In this case, the pop-up would be Tennessee. Upon click, the hover would disappear and the screen would transition into the state.
 
 ## Project Schedule
+Deadline:
+* November 14: Data processing
+* November 21: Implementation of map of US with data populated, toggle added, and slider enabled
+* November 28: Implementation of zoom-ins and individual states, and parallel coordinates
+* December 7: Clean up and add optional features
 
 ## Visualization Design
