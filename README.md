@@ -24,7 +24,7 @@ Overall, we hope to complete data processing well within a week.
 ## Must-Have Features
 The first feature we hope to implement will be individual datasets mapped over time. We will have three layers of data that the user can toggle and a slider to indicate time. The user can adjust the dataset and slider to see the instantaneous and continuous change in data over time across the United States.
 
-The second feature would be zoom-in features. The user should be able to click on a state and this will zoom into the desired state. Big cities will be marked on the map.
+The second feature would be zoom-in features. The user should be able to click on a state and this will zoom into the desired state. The state will be more detailed with county lines. Big cities will be marked on the map.
 
 ## Optional Features
 
