@@ -57,5 +57,5 @@ Ensure python2.7 or python3 is installed
 
 If you are running python2.x, then issue: `python -m SimpleHTTPServer to the terminal`. If you are running python3.x, then issue: `python -m http.server` in order to start a local server
 
-Now using Google Chrome or Firefox go to <localhost:8000/data_vis_project/index.html> in order to view the project visualization.
+Now using Google Chrome or Firefox go to <http://localhost:8000/data_vis_project/index.html> in order to view the project visualization.
 
