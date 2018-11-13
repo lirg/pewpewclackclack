@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang='en'>
+	<head>
+		<meta charset='utf-8'>
+		<title>Gun Violence</title>
+		<script type='text/javascript' src='../d3.js'></script>
+	</head>
+	<body>
+	</body>
+	<script type='text/javascript' src='gun_violence_visualization.js'></script>
+	<script src="https://d3js.org/topojson.v2.min.js"></script>
+	<script type='text/javascript'>
+	{
+		d3.json('https://unpkg.com/us-atlas@1/us/10m.json').then(function(data)  {
+			// US map data
+			us = data;
+			// d3.csv('.csv').then(function(data)  {
+			//   gun_violence_data = data;
+				plot_it();
+			// })
+			})
+	}
+
+	</script>
+</html>
