@@ -49,3 +49,10 @@ US Multiview:
 
 US Stateview:
 ![US Stateview](Images/visualization_design_stateview.jpg)
+
+## Instructions
+Clone this repo by running `git clone https://github.com/lirg/pewpewclackclack` command
+Ensure python2.7 or python3 is installed
+If you are running python2.x, then issue: `python -m SimpleHTTPServer to the terminal`. If you are running python3.x, then issue: `python -m http.server` in order to start a local server
+Now go to [localhost:8000/data_vis_project/index.html]localhost:8000/data_vis_project/index.html in order to view the project visualization.
+
