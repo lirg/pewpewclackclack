@@ -52,10 +52,10 @@ US Stateview:
 
 ## Instructions
 Clone this repo by running `git clone https://github.com/lirg/pewpewclackclack` command
+Since general gun violence data is big, download it separately [here](https://www.kaggle.com/jameslko/gun-violence-data) and put it into the `data/gun-violence-general/` folder.
 
 Ensure python2.7 or python3 is installed
 
-If you are running python2.x, then issue: `python -m SimpleHTTPServer to the terminal`. If you are running python3.x, then issue: `python -m http.server` in order to start a local server
+If you are running python2.x, then issue: `python -m SimpleHTTPServer` to the terminal. If you are running python3.x, then issue: `python -m http.server` in order to start a local server
 
 Now using Google Chrome or Firefox go to <http://localhost:8000/data_vis_project/index.html> in order to view the project visualization.
-
