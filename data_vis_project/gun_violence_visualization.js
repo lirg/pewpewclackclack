@@ -1,8 +1,14 @@
-// taken from the choropleth.js file from lecture in CS 3891 Data Visualization
-
-function plot_it()  {
+function graph_map() {
 	var width = 960;
-	var height = 600;
+	var height = 1000;
+	var pad = 30
+	d3.select('body').append('svg').attr('width', width).attr('height', height)
+	plot_it(width, height);
+	add_slider(width, height, pad);
+}
+
+// taken from the choropleth.js file from lecture in CS 3891 Data Visualization
+function plot_it(width, height)  {
 	var path = d3.geoPath();
 
 	color = d3.scaleQuantize()
@@ -15,7 +21,7 @@ function plot_it()  {
 	  .domain(d3.extent(color.domain()))
 	  .rangeRound([600, 860]);
 
-	var svg = d3.select('body').append('svg').attr('width', width).attr('height', height)
+	var svg = d3.select('svg');
 
 	var g = svg.append("g")
 	  .attr("transform", "translate(0,40)");
@@ -63,4 +69,24 @@ function plot_it()  {
 	  .attr("stroke", "black")
 	  .attr("stroke-linejoin", "round")
 	  .attr("d", path);
+}
+
+// Draws a slider based on the data chosen.
+// TODO: attach slider data, make time a scale of the time on the data.
+function add_slider(width, height, pad){
+	var slider = d3.sliderHorizontal()
+    .min(0)
+    .max(10)
+    .step(1)
+    .width(300)
+    .displayValue(false)
+    .on('onchange', val => {
+      d3.select("#value").text(val);
+    });
+
+  d3.select("svg")
+    .append("g")
+	.attr("id", "slider")
+    .attr("transform", "translate(" + width / 2 + "," + (600 + pad) + ")")
+    .call(slider);
 }

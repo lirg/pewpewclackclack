@@ -9,6 +9,7 @@
 	</body>
 	<script type='text/javascript' src='gun_violence_visualization.js'></script>
 	<script src="https://d3js.org/topojson.v2.min.js"></script>
+	<script src="https://unpkg.com/d3-simple-slider"></script>
 	<script type='text/javascript'>
 	{
 		d3.json('https://unpkg.com/us-atlas@1/us/10m.json').then(function(data)  {
@@ -16,7 +17,7 @@
 			us = data;
 			// d3.csv('.csv').then(function(data)  {
 			//   gun_violence_data = data;
-				plot_it();
+				graph_map();
 			// })
 			})
 	}
