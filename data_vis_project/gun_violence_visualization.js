@@ -1,14 +1,78 @@
+var state_to_fips = {
+   "Alabama"                :  "01",
+   "Alaska"                 :  "02",
+   "Arizona"                :  "04",
+   "Arkansas"               :  "05",
+   "California"             :  "06",
+   "Colorado"               :  "08",
+   "Connecticut"            :  "09",
+   "Delaware"               :  "10",
+   "District of Columbia"   :  "11",
+   "Florida"                :  "12",
+   "Georgia"                 :  "13",
+   "Hawaii"                 :  "15",
+   "Idaho"                  :  "16",
+   "Illinois"               :  "17",
+   "Indiana"                :  "18",
+   "Iowa"                   :  "19",
+   "Kansas"                 :  "20",
+   "Kentucky"               :  "21",
+   "Louisiana"              :  "22",
+   "Maine"                  :  "23",
+   "Maryland"               :  "24",
+   "Massachusetts"          :  "25",
+   "Michigan"               :  "26",
+   "Minnesota"              :  "27",
+   "Mississippi"            :  "28",
+   "Missouri"               :  "29",
+   "Montana"                :  "30",
+   "Nebraska"               :  "31",
+   "Nevada"                 :  "32",
+   "New Hampshire"          :  "33",
+   "New Jersey"             :  "34",
+   "New Mexico"             :  "35",
+   "New York"               :  "36",
+   "North Carolina"         :  "37",
+   "North Dakota"           :  "38",
+   "Ohio"                   :  "39",
+   "Oklahoma"               :  "40",
+   "Oregon"                 :  "41",
+   "Pennsylvania"           :  "42",
+   "Rhode Island"           :  "44",
+   "South Carolina"         :  "45",
+   "South Dakota"           :  "46",
+   "Tennessee"              :  "47",
+   "Texas"                  :  "48",
+   "Utah"                   :  "49",
+   "Vermont"                :  "50",
+   "Virginia"               :  "51",
+   "Washington"             :  "53",
+   "West Virginia"          :  "54",
+   "Wisconsin"              :  "55",
+   "Wyoming"                :  "56"
+}
+
 function graph_map(path) {
 	var width = 960;
 	var height = 1000;
 	var pad = 30
 	d3.select('body').append('svg').attr('width', width).attr('height', height)
 
-	d3.csv(path).then(function(data)  {
-	  map_data = data;
-	  plot_it(width, height, map_data);
-	  add_slider(width, height, pad);
-	})
+	// TODO: Reprocesses data if we switch between datasets. Should keep old data in the future.
+	if (path === '/data/stanford-msa-2017/mass_shooting_events_stanford_msa_release_06142016_plus2017.csv') {
+		d3.csv(path, function(d) {
+			// add year to data
+			var year = d.Date.split("/")[2];
+			d.Year = year;
+			// add fips id to data
+			d.fips = state_to_fips[d.State];
+			return d;
+		}).then(function(data)  {
+		  map_data = data;
+		  plot_it(width, height, map_data);
+		  add_slider(width, height, pad, map_data);
+		})
+	}
 }
 
 // taken from the choropleth.js file from lecture in CS 3891 Data Visualization
@@ -23,19 +87,14 @@ function plot_it(width, height, mass_shooting_data)  {
 
 	// skim data from parsed mass shootings data file
 	var mass_shootings_count = {};
-	mass_shooting_data.forEach(function(d) {
-		// console.log(d);
-		mass_shootings_count[d.state_id] = parseInt(d.shootings);
-
-		// TESTING _______________
-		// if (mass_shootings_count[d.State]) {
-		// 	mass_shootings_count[d.State] += 1;
-		// } else {
-		// 	mass_shootings_count[d.State] = 1;
-		// }
+	var fips_array = Object.values(state_to_fips);
+	fips_array.forEach(function(d) {
+		mass_shootings_count[d] = 0;
 	});
-
-	console.log(mass_shootings_count);
+	mass_shooting_data.forEach(function(d) {
+		mass_shootings_count[d.fips] += 1;
+	});
+	// console.log(mass_shootings_count);
 
 	var x = d3.scaleLinear()
 	  .domain(d3.extent(color.domain()))
@@ -80,11 +139,11 @@ function plot_it(width, height, mass_shooting_data)  {
 		  .attr("class", "state")
 		  .attr("d", path)
 		  .attr('fill', 'none')
-	  	  .attr("fill", function(d) { 
+	  	  .attr("fill", function(d) {
 	  	  	// console.log(d);
 	  	  	// console.log(mass_shootings_count[d.id]);
 	  	  	return color(mass_shootings_count[d.id]);
-	  	  } 
+	  	  }
 	  	  )
 
 	  //.datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
@@ -99,20 +158,24 @@ function plot_it(width, height, mass_shooting_data)  {
 
 // Draws a slider based on the data chosen.
 // TODO: attach slider data, make time a scale of the time on the data.
-function add_slider(width, height, pad){
-	var slider = d3.sliderHorizontal()
-    .min(0)
-    .max(10)
-    .step(1)
-    .width(300)
-    .displayValue(false)
-    .on('onchange', val => {
-      d3.select("#value").text(val);
-    });
+function add_slider(width, height, pad, map_data){
+	// console.log(map_data);
+	var min_category_val = parseInt(d3.min(map_data, d => d.Year));
+	var max_category_val = parseInt(d3.max(map_data, d => d.Year));
+
+	var data3 = d3.range(0, max_category_val - min_category_val + 2).map(function (d) { return new Date(min_category_val + d, 0, 1);});
+	console.log(data3);
+
+	var slider3 = d3.sliderHorizontal()
+	  .min(d3.min(data3))
+	  .max(d3.max(data3))
+	  .step(1000 * 60 * 60 * 24 * 365)
+	  .width(800)
+	  .tickFormat(d3.timeFormat('%Y'));
 
   d3.select("svg")
     .append("g")
 	.attr("id", "slider")
-    .attr("transform", "translate(" + width / 2 + "," + (600 + pad) + ")")
-    .call(slider);
+    .attr("transform", "translate(" + pad + "," + (600 + pad) + ")")
+    .call(slider3);
 }
