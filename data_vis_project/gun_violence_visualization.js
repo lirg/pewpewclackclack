@@ -1,14 +1,18 @@
-function graph_map() {
+function graph_map(path) {
 	var width = 960;
 	var height = 1000;
 	var pad = 30
 	d3.select('body').append('svg').attr('width', width).attr('height', height)
-	plot_it(width, height);
-	add_slider(width, height, pad);
+
+	d3.csv(path).then(function(data)  {
+	  map_data = data;
+	  plot_it(width, height, map_data);
+	  add_slider(width, height, pad);
+	})
 }
 
 // taken from the choropleth.js file from lecture in CS 3891 Data Visualization
-function plot_it(width, height)  {
+function plot_it(width, height, mass_shooting_data)  {
 	var path = d3.geoPath();
 
 	color = d3.scaleQuantize()
@@ -18,7 +22,7 @@ function plot_it(width, height)  {
 	format = d3.format("")
 
 	var mass_shootings_count = {};
-	mass_shooting_data.forEach(function(d)  {
+	mass_shooting_data.forEach(function(d) {
 		if (mass_shootings_count[d.State]) {
 			mass_shootings_count[d.State] += 1;
 		} else {
@@ -63,14 +67,14 @@ function plot_it(width, height)  {
 		  .remove();
 	}
 
-	state_geometries = topojson.feature(us, us.objects.states).features
+	county_geometries = topojson.feature(us, us.objects.counties).features
 	svg.append("g")
 		.selectAll("path")
-		.data(state_geometries)
+		.data(county_geometries)
 		.enter().append("path")
-		  .attr("class", "state")
+		  .attr("class", "county")
 		  .attr("d", path)
-	  	  .attr("fill", (d) => color(mass_shootings_count[d.State]))
+		  .attr("fill", 'none')
 
 	  //.datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
 	console.log(us.objects.states)
@@ -79,7 +83,7 @@ function plot_it(width, height)  {
 	  .attr("fill", "none")
 	  .attr("stroke", "black")
 	  .attr("stroke-linejoin", "round")
-	  .attr("d", path)
+	  .attr("d", path);
 }
 
 // Draws a slider based on the data chosen.

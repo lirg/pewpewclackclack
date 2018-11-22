@@ -15,10 +15,7 @@
 		d3.json('https://unpkg.com/us-atlas@1/us/10m.json').then(function(data)  {
 			// US map data
 			us = data;
-			d3.csv('mass_shooting_events_stanford_msa_release_06142016_plus2017.csv').then(function(data)  {
-			  	mass_shooting_data = data;
-				graph_map();
-			})
+			graph_map('/data/stanford-msa-2017/mass_shooting_events_stanford_msa_release_06142016_plus2017.csv');
 		})
 	}
 
