@@ -59,3 +59,7 @@ Ensure python2.7 or python3 is installed
 If you are running python2.x, then issue: `python -m SimpleHTTPServer` to the terminal. If you are running python3.x, then issue: `python -m http.server` in order to start a local server
 
 Now using Google Chrome or Firefox go to <http://localhost:8000/data_vis_project/index.html> in order to view the project visualization.
+
+## References
+* Slider source code and documentation [here](https://bl.ocks.org/johnwalley/e1d256b81e51da68f7feb632a53c3518)
+* US Map visualization taken from `choropleth.js` file from lecture in CS 3891 Data Visualization
