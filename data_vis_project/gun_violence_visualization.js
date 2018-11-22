@@ -17,6 +17,17 @@ function plot_it(width, height)  {
 
 	format = d3.format("")
 
+	var mass_shootings_count = {};
+	mass_shooting_data.forEach(function(d)  {
+		if (mass_shootings_count[d.State]) {
+			mass_shootings_count[d.State] += 1;
+		} else {
+			mass_shootings_count[d.State] = 1;
+		}
+	});
+
+	console.log(mass_shootings_count);
+
 	var x = d3.scaleLinear()
 	  .domain(d3.extent(color.domain()))
 	  .rangeRound([600, 860]);
@@ -52,14 +63,14 @@ function plot_it(width, height)  {
 		  .remove();
 	}
 
-	county_geometries = topojson.feature(us, us.objects.counties).features
+	state_geometries = topojson.feature(us, us.objects.states).features
 	svg.append("g")
 		.selectAll("path")
-		.data(county_geometries)
+		.data(state_geometries)
 		.enter().append("path")
-		  .attr("class", "county")
+		  .attr("class", "state")
 		  .attr("d", path)
-		  .attr("fill", 'none')
+	  	  .attr("fill", (d) => color(mass_shootings_count[d.State]))
 
 	  //.datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
 	console.log(us.objects.states)
@@ -68,7 +79,7 @@ function plot_it(width, height)  {
 	  .attr("fill", "none")
 	  .attr("stroke", "black")
 	  .attr("stroke-linejoin", "round")
-	  .attr("d", path);
+	  .attr("d", path)
 }
 
 // Draws a slider based on the data chosen.
