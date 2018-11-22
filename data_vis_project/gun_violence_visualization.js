@@ -21,13 +21,18 @@ function plot_it(width, height, mass_shooting_data)  {
 
 	format = d3.format("")
 
+	// skim data from parsed mass shootings data file
 	var mass_shootings_count = {};
 	mass_shooting_data.forEach(function(d) {
-		if (mass_shootings_count[d.State]) {
-			mass_shootings_count[d.State] += 1;
-		} else {
-			mass_shootings_count[d.State] = 1;
-		}
+		// console.log(d);
+		mass_shootings_count[d.state_id] = parseInt(d.shootings);
+
+		// TESTING _______________
+		// if (mass_shootings_count[d.State]) {
+		// 	mass_shootings_count[d.State] += 1;
+		// } else {
+		// 	mass_shootings_count[d.State] = 1;
+		// }
 	});
 
 	console.log(mass_shootings_count);
@@ -67,28 +72,20 @@ function plot_it(width, height, mass_shooting_data)  {
 		  .remove();
 	}
 
-<<<<<<< HEAD
 	state_geometries = topojson.feature(us, us.objects.states).features
-	console.log(state_geometries);
-=======
-	county_geometries = topojson.feature(us, us.objects.counties).features
->>>>>>> 3631b9628e678758f3df05826aed43044f814642
 	svg.append("g")
 		.selectAll("path")
-		.data(county_geometries)
+		.data(state_geometries)
 		.enter().append("path")
-		  .attr("class", "county")
+		  .attr("class", "state")
 		  .attr("d", path)
-<<<<<<< HEAD
-	  	  // .attr("fill", function(d) { 
-	  	  // 	// console.log(d);
-	  	  // 	// console.log(mass_shootings_count[d.State]);
-	  	  // 	return color(mass_shootings_count[d.State]);
-	  	  // } 
-	  	  // )
-=======
-		  .attr("fill", 'none')
->>>>>>> 3631b9628e678758f3df05826aed43044f814642
+		  .attr('fill', 'none')
+	  	  .attr("fill", function(d) { 
+	  	  	// console.log(d);
+	  	  	// console.log(mass_shootings_count[d.id]);
+	  	  	return color(mass_shootings_count[d.id]);
+	  	  } 
+	  	  )
 
 	  //.datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
 	console.log(us.objects.states)
