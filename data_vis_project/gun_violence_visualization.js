@@ -12,7 +12,7 @@ function plot_it(width, height)  {
 	var path = d3.geoPath();
 
 	color = d3.scaleQuantize()
-      .domain([1, 10])
+      .domain([0, 40])
       .range(d3.schemeBlues[9])
 
 	format = d3.format("")
@@ -37,8 +37,8 @@ function plot_it(width, height)  {
 	var g = svg.append("g")
 	  .attr("transform", "translate(0,40)");
 
-	var show_choropleth = false;
-	if(show_choropleth)  {
+	var show_legend = false;
+	if(show_legend)  {
 		g.selectAll("rect")
 			.data(color.range().map(d => color.invertExtent(d)))
 			.enter().append("rect")
@@ -64,13 +64,19 @@ function plot_it(width, height)  {
 	}
 
 	state_geometries = topojson.feature(us, us.objects.states).features
+	console.log(state_geometries);
 	svg.append("g")
 		.selectAll("path")
 		.data(state_geometries)
 		.enter().append("path")
 		  .attr("class", "state")
 		  .attr("d", path)
-	  	  .attr("fill", (d) => color(mass_shootings_count[d.State]))
+	  	  // .attr("fill", function(d) { 
+	  	  // 	// console.log(d);
+	  	  // 	// console.log(mass_shootings_count[d.State]);
+	  	  // 	return color(mass_shootings_count[d.State]);
+	  	  // } 
+	  	  // )
 
 	  //.datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
 	console.log(us.objects.states)
