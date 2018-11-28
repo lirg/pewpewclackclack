@@ -52,8 +52,6 @@ var state_to_fips = {
    "Wyoming"                :  "56"
 }
 
-<<<<<<< HEAD
-=======
 var abbrev_to_fips = {
    "AL"                 :  "01",
    "AK"                 :  "02",
@@ -108,7 +106,6 @@ var abbrev_to_fips = {
    "WY"                 :  "56"
 }
 
->>>>>>> c120175c441ac59a42c9e37fd65bad1d2d024c15
 var abbrev_to_state = {
 	'AL': 'Alabama',
 	'AK': 'Alaska',
