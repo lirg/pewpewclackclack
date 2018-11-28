@@ -106,40 +106,84 @@ var abbrev_to_state = {
 	'WY': 'Wyoming'
 }
 
+var shooting_type = {
+    "mass_shooting": 0,
+    "police_shooting": 1
+}
+
+var current_data = shooting_type["mass_shooting"];
+
+var shooting_data = {
+    mass_shooting: {
+    },
+    police_shooting: {
+    },
+    gun_violence: {
+    }
+}
+
 function graph_map(path_array) {
 	var width = 960;
 	var height = 1000;
 	var pad = 30
 	d3.select('body').append('svg').attr('width', width).attr('height', height)
 
-	// TODO: Reprocesses data if we switch between datasets. Should keep old data in the future.
-	var data_array = [];
-	path_array.forEach(function(path) {
-		d3.csv(path, function(d) {
-			// console.log(d.date);
-			if (d.date) {
-				// add year to data
-				var year = d.date.split("/")[2];
-				d.Year = year;
+    var promises = [];
+    path_array.forEach(function(path) {
+        promises.push(formatCSV(path))
+    });
 
-				if (d.state.length == 2) {
-					d.state = abbrev_to_state[d.state];
-				}
-				// add fips id to data
-				d.fips = state_to_fips[d.state];
+    Promise.all(promises).then(function(values) {
+        console.log(values);
+        formatData(values);
+        plot_it(width, height, values);
+        add_slider(width, height, pad, shooting_data.mass_shooting.data);
+    });
+}
+
+async function formatCSV(path) {
+    console.log("run");
+	var data = await d3.csv(path, function(d) {
+		if (d.date) {
+			// add year to data
+			var year = d.date.split("/")[2];
+			d.Year = year;
+
+			if (d.state.length == 2) {
+				d.state = abbrev_to_state[d.state];
 			}
-			return d;
-		}).then(function(data)  {
-			// console.log(data);
-	    	data_array.push(data);
-	    	return data;
-		}).then(function(data) {
-			// console.log(data_array);
-			plot_it(width, height, data_array);
-			add_slider(width, height, pad, data_array);
-		})
-	});
-	// console.log(data_array);
+			// add fips id to data
+			d.fips = state_to_fips[d.state];
+		}
+		return d;
+	})
+    return data;
+}
+
+function formatData(data_array){
+    console.log("run2");
+    shooting_data.mass_shooting.data = data_array[0];
+    shooting_data.police_shooting.data = data_array[1];
+
+    // skim data from parsed shootings data file
+    for (var i = 0; i < data_array.length; i++) {
+        var shootings_count = {};
+		var fips_array = Object.values(state_to_fips);
+        console.log(fips_array);
+
+		fips_array.forEach(function(d) {
+			shootings_count[d] = 0;
+		});
+		data_array[i].forEach(function(d) {
+			shootings_count[d.fips] += 1;
+		});
+
+        if (i === 0) {
+            shooting_data.mass_shooting.total_shootings = shootings_count;
+        } else if (i == 1) {
+            shooting_data.police_shooting.total_shootings = shootings_count;
+        }
+    }
 }
 
 // taken from the choropleth.js file from lecture in CS 3891 Data Visualization
@@ -148,28 +192,10 @@ function plot_it(width, height, datasets)  {
 
 	format = d3.format("")
 
-	// skim data from parsed shootings data file
-	var shootings_dataset = [];
-	datasets.forEach(function(data) {
-		var shootings_count = {};
-		var fips_array = Object.values(state_to_fips);
-		fips_array.forEach(function(d) {
-			shootings_count[d] = 0;
-		});
-
-		data.forEach(function(d) {
-			shootings_count[d.fips] += 1;
-		});
-
-		shootings_dataset.push(shootings_count);
-
-	})
-	// console.log(shootings_dataset);
-
 	// initially display mass shootings data
-	var dataset_array = Object.values(shootings_dataset[0]);
-	var min = Math.min(...dataset_array);
-	var max = Math.max(...dataset_array);
+	var shootings_values = Object.values(shooting_data.mass_shooting.total_shootings);
+	var min = Math.min(...shootings_values);
+	var max = Math.max(...shootings_values);
 
 	color = d3.scaleQuantize()
 	    .domain([min, max])
@@ -192,7 +218,7 @@ function plot_it(width, height, datasets)  {
 		  .attr("class", "state")
 		  .attr("d", path)
 	  	  .attr("fill", function(d) {
-	  	  	return color(shootings_dataset[0][d.id]);
+              return color(shooting_data.mass_shooting.total_shootings[d.id]);
 	  	  })
 
 	  //.datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
@@ -205,7 +231,11 @@ function plot_it(width, height, datasets)  {
 	  .attr("d", path);
 
 	// function for updating the data views
-	function display_map(data, min, max) {
+	function display_map(dataset_name) {
+        var shootings_values = Object.values(shooting_data[dataset_name].total_shootings);
+    	var min = Math.min(...shootings_values);
+    	var max = Math.max(...shootings_values);
+
 		color = d3.scaleQuantize()
 		    .domain([min, max])
 		    .range(d3.schemeBlues[9]);
@@ -214,23 +244,19 @@ function plot_it(width, height, datasets)  {
 			  .attr("class", "state")
 			  .attr("d", path)
 		  	  .attr("fill", function(d) {
-		  	  	return color(data[d.id]);
+		  	  	return color(shooting_data[dataset_name].total_shootings[d.id]);
 		  	  })
 	}
 
 	// button event handlers for switching data views
 	d3.select('#mass_shooting_button').on('click', function(d) {
-		var dataset_array = Object.values(shootings_dataset[0]);
-		var min = Math.min(...dataset_array);
-		var max = Math.max(...dataset_array);
-		display_map(shootings_dataset[0], min, max);
+        update_slider();
+		display_map("mass_shooting");
 	});
 
 	d3.select('#police_killings_button').on('click', function(d) {
-		var dataset_array = Object.values(shootings_dataset[1]);
-		var min = Math.min(...dataset_array);
-		var max = Math.max(...dataset_array);		
-		display_map(shootings_dataset[1], min, max);
+        update_slider();
+		display_map("police_shooting");
 	});
 
 	// d3.select('#gun_violence_button').on('click', function(d) {
@@ -246,7 +272,7 @@ function add_slider(width, height, pad, map_data){
 	var max_category_val = parseInt(d3.max(map_data, d => d.Year));
 
 	var data3 = d3.range(0, max_category_val - min_category_val + 2).map(function (d) { return new Date(min_category_val + d, 0, 1);});
-	console.log(data3);
+	// console.log(data3);
 
 	var slider3 = d3.sliderHorizontal()
 	  .min(d3.min(data3))
@@ -260,4 +286,8 @@ function add_slider(width, height, pad, map_data){
 	.attr("id", "slider")
     .attr("transform", "translate(" + pad + "," + (600 + pad) + ")")
     .call(slider3);
+}
+
+function update_slider() {
+
 }
