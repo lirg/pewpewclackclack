@@ -6,6 +6,11 @@
 		<script type='text/javascript' src='../d3.js'></script>
 	</head>
 	<body>
+		<div class='data_toggle'>
+			<button id='mass_shooting_button'>Mass Shootings</button>
+			<button id='police_killings_button'>Police Killings</button>
+			<button id='gun_violence_button'>Gun Violence</button>
+		</div>
 	</body>
 	<script type='text/javascript' src='gun_violence_visualization.js'></script>
 	<script src="https://d3js.org/topojson.v2.min.js"></script>
@@ -15,8 +20,26 @@
 		d3.json('https://unpkg.com/us-atlas@1/us/10m.json').then(function(data)  {
 			// US map data
 			us = data;
-			graph_map('/data/stanford-msa-2017/mass_shooting_events_stanford_msa_release_06142016_plus2017.csv');
-			// graph_map('/data/mass_shootings_by_state.csv');
+			// var ms_data, ps_data, gv_data;
+			var data_paths = [
+				'/data/stanford-msa-2017/mass_shooting_events_stanford_msa_release_06142016_plus2017.csv',
+				'/data/fatal-police-shootings-in-the-us/PoliceKillingsUS.csv'
+			]
+
+			// d3.csv('/data/stanford-msa-2017/mass_shooting_events_stanford_msa_release_06142016_plus2017.csv').then(function(data)  {
+			//   	ms_data = data;
+			// 	 // console.log(ms_data);
+
+			// 	d3.csv('/data/fatal-police-shootings-in-the-us/PoliceKillingsUS.csv').then(function(data)  {
+			// 	  	ps_data = data;
+			// 	  	// console.log(ps_data);
+				
+			// 		graph_map();
+			// 	});
+			// })
+
+			graph_map(data_paths);
+			// graph_map('/data/fatal-police-shootings-in-the-us/PoliceKillingsUS.csv');
 		})
 	}
 
