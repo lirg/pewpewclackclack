@@ -134,12 +134,12 @@ function graph_map(path_array) {
 	    	data_array.push(data);
 	    	return data;
 		}).then(function(data) {
-			console.log(data_array);
+			// console.log(data_array);
 			plot_it(width, height, data_array);
 			add_slider(width, height, pad, data_array);
 		})
 	});
-	console.log(data_array);
+	// console.log(data_array);
 }
 
 // taken from the choropleth.js file from lecture in CS 3891 Data Visualization
@@ -164,49 +164,59 @@ function plot_it(width, height, datasets)  {
 		shootings_dataset.push(shootings_count);
 
 	})
-	console.log(shootings_dataset);
+	// console.log(shootings_dataset);
 
 	// initially display mass shootings data
 	var dataset_array = Object.values(shootings_dataset[0]);
 	var min = Math.min(...dataset_array);
 	var max = Math.max(...dataset_array);
 
+	color = d3.scaleQuantize()
+	    .domain([min, max])
+	    .range(d3.schemeBlues[9])
+
 	var svg = d3.select('svg');
 
 	var g = svg.append("g")
 	  .attr("transform", "translate(0,40)");
 
+	var x = d3.scaleLinear()
+		.domain(d3.extent(color.domain()))
+		.rangeRound([600, 860]);
+
+	state_geometries = topojson.feature(us, us.objects.states).features
+	svg.append("g")
+		.selectAll("path")
+		.data(state_geometries)
+		.enter().append("path")
+		  .attr("class", "state")
+		  .attr("d", path)
+	  	  .attr("fill", function(d) {
+	  	  	return color(shootings_dataset[0][d.id]);
+	  	  })
+
+	  //.datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
+	// console.log(us.objects.states)
+	svg.append("path")
+	  .datum(topojson.mesh(us, us.objects.states))
+	  .attr("fill", "none")
+	  .attr("stroke", "black")
+	  .attr("stroke-linejoin", "round")
+	  .attr("d", path);
+
+	// function for updating the data views
 	function display_map(data, min, max) {
 		color = d3.scaleQuantize()
-	      .domain([min, max])
-	      .range(d3.schemeBlues[9])
+		    .domain([min, max])
+		    .range(d3.schemeBlues[9]);
 
-		var x = d3.scaleLinear()
-		  .domain(d3.extent(color.domain()))
-		  .rangeRound([600, 860]);
-
-		state_geometries = topojson.feature(us, us.objects.states).features
-		svg.append("g")
-			.selectAll("path")
-			.data(state_geometries)
-			.enter().append("path")
+		svg.selectAll('.state')
 			  .attr("class", "state")
 			  .attr("d", path)
-			  .attr('fill', 'none')
 		  	  .attr("fill", function(d) {
 		  	  	return color(data[d.id]);
 		  	  })
-
-		  //.datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
-		console.log(us.objects.states)
-		svg.append("path")
-		  .datum(topojson.mesh(us, us.objects.states))
-		  .attr("fill", "none")
-		  .attr("stroke", "black")
-		  .attr("stroke-linejoin", "round")
-		  .attr("d", path);
 	}
-	display_map(shootings_dataset[0], min, max);
 
 	// button event handlers for switching data views
 	d3.select('#mass_shooting_button').on('click', function(d) {
