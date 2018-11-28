@@ -134,7 +134,6 @@ function graph_map(path_array) {
     });
 
     Promise.all(promises).then(function(values) {
-        console.log(values);
         formatData(values);
         plot_it(width, height, values);
         add_slider(width, height, pad, shooting_data.mass_shooting.data);
@@ -142,7 +141,6 @@ function graph_map(path_array) {
 }
 
 async function formatCSV(path) {
-    console.log("run");
 	var data = await d3.csv(path, function(d) {
 		if (d.date) {
 			// add year to data
@@ -161,7 +159,6 @@ async function formatCSV(path) {
 }
 
 function formatData(data_array){
-    console.log("run2");
     shooting_data.mass_shooting.data = data_array[0];
     shooting_data.police_shooting.data = data_array[1];
 
@@ -169,8 +166,6 @@ function formatData(data_array){
     for (var i = 0; i < data_array.length; i++) {
         var shootings_count = {};
 		var fips_array = Object.values(state_to_fips);
-        console.log(fips_array);
-
 		fips_array.forEach(function(d) {
 			shootings_count[d] = 0;
 		});
