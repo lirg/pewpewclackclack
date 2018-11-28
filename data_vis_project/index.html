@@ -20,26 +20,13 @@
 		d3.json('https://unpkg.com/us-atlas@1/us/10m.json').then(function(data)  {
 			// US map data
 			us = data;
-			// var ms_data, ps_data, gv_data;
+			// TODO: somehow add the large gun violence dataset
 			var data_paths = [
 				'/data/stanford-msa-2017/mass_shooting_events_stanford_msa_release_06142016_plus2017.csv',
 				'/data/fatal-police-shootings-in-the-us/PoliceKillingsUS.csv'
 			]
 
-			// d3.csv('/data/stanford-msa-2017/mass_shooting_events_stanford_msa_release_06142016_plus2017.csv').then(function(data)  {
-			//   	ms_data = data;
-			// 	 // console.log(ms_data);
-
-			// 	d3.csv('/data/fatal-police-shootings-in-the-us/PoliceKillingsUS.csv').then(function(data)  {
-			// 	  	ps_data = data;
-			// 	  	// console.log(ps_data);
-				
-			// 		graph_map();
-			// 	});
-			// })
-
 			graph_map(data_paths);
-			// graph_map('/data/fatal-police-shootings-in-the-us/PoliceKillingsUS.csv');
 		})
 	}
 

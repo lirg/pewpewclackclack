@@ -52,60 +52,6 @@ var state_to_fips = {
    "Wyoming"                :  "56"
 }
 
-var abbrev_to_fips = {
-   "AL"                :  "01",
-   "AK"                 :  "02",
-   "AZ"                :  "04",
-   "AR"               :  "05",
-   "CA"             :  "06",
-   "CO"               :  "08",
-   "CT"            :  "09",
-   "DE"               :  "10",
-   "DC"   :  "11",
-   "FL"                :  "12",
-   "GA"                 :  "13",
-   "HI"                 :  "15",
-   "ID"                  :  "16",
-   "IL"               :  "17",
-   "IN"                :  "18",
-   "IA"                   :  "19",
-   "KS"                 :  "20",
-   "KY"               :  "21",
-   "LA"              :  "22",
-   "ME"                  :  "23",
-   "MD"               :  "24",
-   "MA"          :  "25",
-   "MI"               :  "26",
-   "MN"              :  "27",
-   "MS"            :  "28",
-   "MO"               :  "29",
-   "MT"                :  "30",
-   "NE"               :  "31",
-   "NV"                 :  "32",
-   "NH"          :  "33",
-   "NJ"             :  "34",
-   "NM"             :  "35",
-   "NY"               :  "36",
-   "NC"         :  "37",
-   "ND"           :  "38",
-   "OH"                   :  "39",
-   "OK"               :  "40",
-   "OR"                 :  "41",
-   "PA"           :  "42",
-   "RI"           :  "44",
-   "SC"         :  "45",
-   "SD"           :  "46",
-   "TN"              :  "47",
-   "TX"                  :  "48",
-   "UT"                   :  "49",
-   "VT"                :  "50",
-   "VA"               :  "51",
-   "WA"             :  "53",
-   "WV"          :  "54",
-   "WI"              :  "55",
-   "WY"                :  "56"
-}
-
 var abbrev_to_state = {
 	'AL': 'Alabama',
 	'AK': 'Alaska',
@@ -160,21 +106,16 @@ var abbrev_to_state = {
 	'WY': 'Wyoming'
 }
 
-// global variables
-// ms_data: "mass shootings"
-// ps_data: "police killings"
-// gv_data: "gun violence"
-
 function graph_map(path_array) {
 	var width = 960;
 	var height = 1000;
 	var pad = 30
 	d3.select('body').append('svg').attr('width', width).attr('height', height)
 
+	// TODO: Reprocesses data if we switch between datasets. Should keep old data in the future.
 	var data_array = [];
 	path_array.forEach(function(path) {
 		d3.csv(path, function(d) {
-
 			// console.log(d.date);
 			if (d.date) {
 				// add year to data
@@ -185,7 +126,7 @@ function graph_map(path_array) {
 					d.state = abbrev_to_state[d.state];
 				}
 				// add fips id to data
-				d.fips = state_to_fips[d.State];
+				d.fips = state_to_fips[d.state];
 			}
 			return d;
 		}).then(function(data)  {
@@ -195,43 +136,15 @@ function graph_map(path_array) {
 		}).then(function(data) {
 			console.log(data_array);
 			plot_it(width, height, data_array);
+			add_slider(width, height, pad, data_array);
 		})
-		console.log(data_array);
-
 	});
-
-	// TODO: Reprocesses data if we switch between datasets. Should keep old data in the future.
-	// if (path_array === '/data/fatal-police-shootings-in-the-us/PoliceKillingsUS.csv') {
-	// 	d3.csv(path_array, function(d) {
-	// 		if (d.date) {
-	// 			// add year to data
-	// 			var year = d.date.split("/")[2];
-	// 			d.Year = year;
-	// 			// add fips id to data
-	// 			d.fips = state_to_fips[d.state];
-
-	// 			// for abbreviations
-	// 			d.fips = abbrev_to_fips[d.state];
-	// 		}
-	// 		return d;
-	// 	}).then(function(data)  {
-	// 	  map_data = data;
-	// 	  plot_it(width, height, map_data);
-	// 	  add_slider(width, height, pad, map_data);
-	// 	})
-	// }
-
-	// plot_it(width, height, data_array);
-	// add_slider(width, height, pad, data_array);
+	console.log(data_array);
 }
 
 // taken from the choropleth.js file from lecture in CS 3891 Data Visualization
 function plot_it(width, height, datasets)  {
 	var path = d3.geoPath();
-
-	color = d3.scaleQuantize()
-      .domain([0, 40])
-      .range(d3.schemeBlues[9])
 
 	format = d3.format("")
 
@@ -251,37 +164,27 @@ function plot_it(width, height, datasets)  {
 		shootings_dataset.push(shootings_count);
 
 	})
+	console.log(shootings_dataset);
 
-	// console.log(shootings_dataset);
-
-	// var mass_shootings_count = {};
-	// for state full names
-	// var fips_array = Object.values(state_to_fips);
-	// fips_array.forEach(function(d) {
-	// 	mass_shootings_count[d] = 0;
-	// });
-
-	// // for state abbreviations
-	// var fips_array = Object.values(abbrev_to_fips);
-	// fips_array.forEach(function(d) {
-	// 	mass_shootings_count[d] = 0;
-	// });
-	// datasets.forEach(function(d) {
-	// 	mass_shootings_count[d.fips] += 1;
-	// });
-
-	// console.log(mass_shootings_count);
-
-	var x = d3.scaleLinear()
-	  .domain(d3.extent(color.domain()))
-	  .rangeRound([600, 860]);
+	// initially display mass shootings data
+	var dataset_array = Object.values(shootings_dataset[0]);
+	var min = Math.min(...dataset_array);
+	var max = Math.max(...dataset_array);
 
 	var svg = d3.select('svg');
 
 	var g = svg.append("g")
 	  .attr("transform", "translate(0,40)");
 
-	function display_map(data) {
+	function display_map(data, min, max) {
+		color = d3.scaleQuantize()
+	      .domain([min, max])
+	      .range(d3.schemeBlues[9])
+
+		var x = d3.scaleLinear()
+		  .domain(d3.extent(color.domain()))
+		  .rangeRound([600, 860]);
+
 		state_geometries = topojson.feature(us, us.objects.states).features
 		svg.append("g")
 			.selectAll("path")
@@ -293,37 +196,31 @@ function plot_it(width, height, datasets)  {
 		  	  .attr("fill", function(d) {
 		  	  	return color(data[d.id]);
 		  	  })
+
+		  //.datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
+		console.log(us.objects.states)
+		svg.append("path")
+		  .datum(topojson.mesh(us, us.objects.states))
+		  .attr("fill", "none")
+		  .attr("stroke", "black")
+		  .attr("stroke-linejoin", "round")
+		  .attr("d", path);
 	}
-	display_map(datasets[0]);
-	// state_geometries = topojson.feature(us, us.objects.states).features
-	// svg.append("g")
-	// 	.selectAll("path")
-	// 	.data(state_geometries)
-	// 	.enter().append("path")
-	// 	  .attr("class", "state")
-	// 	  .attr("d", path)
-	// 	  .attr('fill', 'none')
-	//   	  .attr("fill", function(d) {
-	//   	  	// console.log(d);
-	//   	  	// console.log(shootings_count[d.id]);
-	//   	  	return color(mass_shootings_count[d.id]);
-	//   	  })
+	display_map(shootings_dataset[0], min, max);
 
-	  //.datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
-	console.log(us.objects.states)
-	svg.append("path")
-	  .datum(topojson.mesh(us, us.objects.states))
-	  .attr("fill", "none")
-	  .attr("stroke", "black")
-	  .attr("stroke-linejoin", "round")
-	  .attr("d", path);
-
+	// button event handlers for switching data views
 	d3.select('#mass_shooting_button').on('click', function(d) {
-		display_map(shootings_dataset[0]);
+		var dataset_array = Object.values(shootings_dataset[0]);
+		var min = Math.min(...dataset_array);
+		var max = Math.max(...dataset_array);
+		display_map(shootings_dataset[0], min, max);
 	});
 
 	d3.select('#police_killings_button').on('click', function(d) {
-		display_map(shootings_dataset[1]);
+		var dataset_array = Object.values(shootings_dataset[1]);
+		var min = Math.min(...dataset_array);
+		var max = Math.max(...dataset_array);		
+		display_map(shootings_dataset[1], min, max);
 	});
 
 	// d3.select('#gun_violence_button').on('click', function(d) {
