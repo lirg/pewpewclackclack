@@ -106,12 +106,10 @@ var abbrev_to_state = {
 	'WY': 'Wyoming'
 }
 
-var shooting_type = {
-    "mass_shooting": 0,
-    "police_shooting": 1
-}
-
-var current_data = shooting_type["mass_shooting"];
+// var shooting_type = {
+//     "mass_shooting": 0,
+//     "police_shooting": 1
+// }
 
 var shooting_data = {
     mass_shooting: {
@@ -145,6 +143,9 @@ async function formatCSV(path) {
 		if (d.date) {
 			// add year to data
 			var year = d.date.split("/")[2];
+            if (path.includes("police")) {
+                year = "20" + year;
+            }
 			d.Year = year;
 
 			if (d.state.length == 2) {
@@ -164,20 +165,38 @@ function formatData(data_array){
 
     // skim data from parsed shootings data file
     for (var i = 0; i < data_array.length; i++) {
+        var map_data = data_array[i];
         var shootings_count = {};
+        var yearly_shootings = {};
 		var fips_array = Object.values(state_to_fips);
+        var min_year = parseInt(d3.min(map_data, d => d.Year));
+    	var max_year = parseInt(d3.max(map_data, d => d.Year));
+
+        for (var j = 0; j < max_year - min_year + 1; j++) {
+            yearly_shootings[min_year + j] = {};
+        }
 		fips_array.forEach(function(d) {
 			shootings_count[d] = 0;
+            for (var year in yearly_shootings) {
+                yearly_shootings[year][d] = 0;
+            }
 		});
-		data_array[i].forEach(function(d) {
+        console.log(yearly_shootings)
+
+		map_data.forEach(function(d) {
 			shootings_count[d.fips] += 1;
+            yearly_shootings[parseInt(d.Year)][d.fips] += 1;
 		});
 
         if (i === 0) {
             shooting_data.mass_shooting.total_shootings = shootings_count;
+            shooting_data.mass_shooting.yearly_shootings = yearly_shootings;
         } else if (i == 1) {
             shooting_data.police_shooting.total_shootings = shootings_count;
+            shooting_data.police_shooting.yearly_shootings = yearly_shootings;
         }
+
+        console.log(shooting_data);
     }
 }
 
@@ -266,21 +285,21 @@ function add_slider(width, height, pad, map_data){
 	var min_category_val = parseInt(d3.min(map_data, d => d.Year));
 	var max_category_val = parseInt(d3.max(map_data, d => d.Year));
 
-	var data3 = d3.range(0, max_category_val - min_category_val + 2).map(function (d) { return new Date(min_category_val + d, 0, 1);});
+	var data = d3.range(0, max_category_val - min_category_val + 2).map(function (d) { return new Date(min_category_val + d, 0, 1);});
 	// console.log(data3);
 
-	var slider3 = d3.sliderHorizontal()
-	  .min(d3.min(data3))
-	  .max(d3.max(data3))
+	var slider = d3.sliderHorizontal()
+	  .min(d3.min(data))
+	  .max(d3.max(data))
 	  .step(1000 * 60 * 60 * 24 * 365)
 	  .width(800)
 	  .tickFormat(d3.timeFormat('%Y'));
 
-  d3.select("svg")
+    d3.select("svg")
     .append("g")
-	.attr("id", "slider")
+    .attr("id", "slider")
     .attr("transform", "translate(" + pad + "," + (600 + pad) + ")")
-    .call(slider3);
+    .call(slider);
 }
 
 function update_slider() {
