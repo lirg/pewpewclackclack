@@ -134,7 +134,7 @@ function graph_map(path_array) {
     Promise.all(promises).then(function(values) {
         formatData(values);
         plot_it(width, height, values);
-        add_slider(width, height, pad, shooting_data.mass_shooting.data);
+        add_slider(800, 600, pad, shooting_data.mass_shooting);
     });
 }
 
@@ -207,9 +207,19 @@ function plot_it(width, height, datasets)  {
 	format = d3.format("")
 
 	// initially display mass shootings data
-	var shootings_values = Object.values(shooting_data.mass_shooting.total_shootings);
-	var min = Math.min(...shootings_values);
-	var max = Math.max(...shootings_values);
+	// var shootings_values = Object.values(shooting_data.mass_shooting.total_shootings);
+	// var min = Math.min(...shootings_values);
+	// var max = Math.max(...shootings_values);
+
+    var min = 0;
+    var max = 0;
+    for (var year in shooting_data.mass_shooting.yearly_shootings) {
+        var values = Object.values(shooting_data.mass_shooting.yearly_shootings[year]);
+        var temp_min = Math.min(...values);
+        var temp_max = Math.max(...values);
+        min = min < temp_min ? min : temp_min;
+        max = max > temp_max ? max : temp_max;
+    }
 
 	color = d3.scaleQuantize()
 	    .domain([min, max])
@@ -232,7 +242,7 @@ function plot_it(width, height, datasets)  {
 		  .attr("class", "state")
 		  .attr("d", path)
 	  	  .attr("fill", function(d) {
-              return color(shooting_data.mass_shooting.total_shootings[d.id]);
+              return color(shooting_data.mass_shooting.yearly_shootings[1969][d.id]);
 	  	  })
 
 	  //.datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
@@ -245,10 +255,16 @@ function plot_it(width, height, datasets)  {
 	  .attr("d", path);
 
 	// function for updating the data views
-	function display_map(dataset_name) {
-        var shootings_values = Object.values(shooting_data[dataset_name].total_shootings);
-    	var min = Math.min(...shootings_values);
-    	var max = Math.max(...shootings_values);
+	function display_map(dataset, year) {
+        var min = 0;
+        var max = 0;
+        for (var year in dataset.yearly_shootings) {
+            var values = Object.values(dataset.yearly_shootings[year]);
+            var temp_min = Math.min(...values);
+            var temp_max = Math.max(...values);
+            min = min < temp_min ? min : temp_min;
+            max = max > temp_max ? max : temp_max;
+        }
 
 		color = d3.scaleQuantize()
 		    .domain([min, max])
@@ -258,19 +274,19 @@ function plot_it(width, height, datasets)  {
 			  .attr("class", "state")
 			  .attr("d", path)
 		  	  .attr("fill", function(d) {
-		  	  	return color(shooting_data[dataset_name].total_shootings[d.id]);
+		  	  	return color(dataset.yearly_shootings[year][d.id]);
 		  	  })
 	}
 
 	// button event handlers for switching data views
 	d3.select('#mass_shooting_button').on('click', function(d) {
-        update_slider();
-		display_map("mass_shooting");
+        update_slider(shooting_data.mass_shooting);
+		display_map(shooting_data.mass_shooting, 1969); //1969 is default value in slider
 	});
 
 	d3.select('#police_killings_button').on('click', function(d) {
-        update_slider();
-		display_map("police_shooting");
+        update_slider(shooting_data.police_shooting);
+		display_map(shooting_data.police_shooting, 2015);
 	});
 
 	// d3.select('#gun_violence_button').on('click', function(d) {
@@ -280,28 +296,42 @@ function plot_it(width, height, datasets)  {
 
 // Draws a slider based on the data chosen.
 // TODO: attach slider data, make time a scale of the time on the data.
-function add_slider(width, height, pad, map_data){
-	// console.log(map_data);
-	var min_category_val = parseInt(d3.min(map_data, d => d.Year));
-	var max_category_val = parseInt(d3.max(map_data, d => d.Year));
+function add_slider(width, height, pad, dataset){
+    // console.log(map_data);
+    map_data = dataset.data;
+    var min_year = parseInt(d3.min(map_data, d => d.Year));
+    var max_year = parseInt(d3.max(map_data, d => d.Year));
+    var time_range = d3.range(0, max_year - min_year + 2).map(function (d) { return new Date(min_year + d, 0, 1);});
 
-	var data = d3.range(0, max_category_val - min_category_val + 2).map(function (d) { return new Date(min_category_val + d, 0, 1);});
-	// console.log(data3);
-
-	var slider = d3.sliderHorizontal()
-	  .min(d3.min(data))
-	  .max(d3.max(data))
-	  .step(1000 * 60 * 60 * 24 * 365)
-	  .width(800)
-	  .tickFormat(d3.timeFormat('%Y'));
+    //TODO: Figure out how to throttle the slider so it doesn't refresh so often
+    var slider = d3.sliderHorizontal()
+      .min(d3.min(time_range))
+      .max(d3.max(time_range))
+      .step(1000 * 60 * 60 * 24 * 365)
+      .width(width)
+      .tickFormat(d3.timeFormat('%Y'))
+      .on('onchange', val => {
+          console.log(val.getFullYear());
+          //TODO: Refactor to have display_map runnable from here
+          display_map(dataset, val.getFullYear());
+      });
+      // .on('onchange', _.throttle( val => {
+      //     console.log(val.getFullYear())
+      // }, 100));
 
     d3.select("svg")
     .append("g")
     .attr("id", "slider")
-    .attr("transform", "translate(" + pad + "," + (600 + pad) + ")")
+    .attr("transform", "translate(" + pad + "," + (height + pad) + ")")
     .call(slider);
 }
 
-function update_slider() {
-
+function update_slider(dataset) {
+    var slider = d3.select("svg").selectAll("g")
+        .filter(function(d) {
+            return d3.select(this).attr("id") == "slider"
+        })
+        .remove();
+    console.log(slider);
+    add_slider(800, 600, 30, dataset);
 }
