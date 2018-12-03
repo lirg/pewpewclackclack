@@ -123,7 +123,7 @@ var shooting_data = {
 }
 
 function graph_map(path_array) {
-	var width = 960;
+	var width = 1960;
 	var height = 1000;
 	var pad = 30
 	d3.select('body').append('svg').attr('width', width).attr('height', height)
@@ -230,9 +230,9 @@ function plot_it(width, height, datasets)  {
 	var g = svg.append("g")
 	  .attr("transform", "translate(0,40)");
 
-	var x = d3.scaleLinear()
-		.domain(d3.extent(color.domain()))
-		.rangeRound([600, 860]);
+	// var x = d3.scaleLinear()
+	// 	.domain(d3.extent(color.domain()))
+	// 	.rangeRound([600, 860]);
 
 	state_geometries = topojson.feature(us, us.objects.states).features
 	svg.append("g")
