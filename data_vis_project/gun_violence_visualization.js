@@ -204,8 +204,6 @@ function formatData(data_array){
 function plot_it(width, height, datasets)  {
 	var path = d3.geoPath();
 
-	format = d3.format("")
-
 	// initially display mass shootings data
 	// var shootings_values = Object.values(shooting_data.mass_shooting.total_shootings);
 	// var min = Math.min(...shootings_values);
@@ -241,6 +239,7 @@ function plot_it(width, height, datasets)  {
 		.enter().append("path")
 		  .attr("class", "state")
 		  .attr("d", path)
+          .attr("id", function(d) {return d.id})
 	  	  .attr("fill", function(d) {
               return color(shooting_data.mass_shooting.yearly_shootings[1969][d.id]);
 	  	  })
@@ -253,30 +252,6 @@ function plot_it(width, height, datasets)  {
 	  .attr("stroke", "black")
 	  .attr("stroke-linejoin", "round")
 	  .attr("d", path);
-
-	// function for updating the data views
-	function display_map(dataset, year) {
-        var min = 0;
-        var max = 0;
-        for (var year in dataset.yearly_shootings) {
-            var values = Object.values(dataset.yearly_shootings[year]);
-            var temp_min = Math.min(...values);
-            var temp_max = Math.max(...values);
-            min = min < temp_min ? min : temp_min;
-            max = max > temp_max ? max : temp_max;
-        }
-
-		color = d3.scaleQuantize()
-		    .domain([min, max])
-		    .range(d3.schemeBlues[9]);
-
-		svg.selectAll('.state')
-			  .attr("class", "state")
-			  .attr("d", path)
-		  	  .attr("fill", function(d) {
-		  	  	return color(dataset.yearly_shootings[year][d.id]);
-		  	  })
-	}
 
 	// button event handlers for switching data views
 	d3.select('#mass_shooting_button').on('click', function(d) {
@@ -292,6 +267,30 @@ function plot_it(width, height, datasets)  {
 	// d3.select('#gun_violence_button').on('click', function(d) {
 	// 	display_map(shootings_dataset[3]);
 	// });
+}
+
+// function for updating the data views
+function display_map(dataset, year) {
+    console.log("display map called");
+    var min = 0;
+    var max = 0;
+    for (var temp_year in dataset.yearly_shootings) {
+        var values = Object.values(dataset.yearly_shootings[temp_year]);
+        var temp_min = Math.min(...values);
+        var temp_max = Math.max(...values);
+        min = min < temp_min ? min : temp_min;
+        max = max > temp_max ? max : temp_max;
+    }
+
+    color = d3.scaleQuantize()
+        .domain([min, max])
+        .range(d3.schemeBlues[9]);
+
+    d3.select("svg").selectAll('.state')
+          .attr("fill", function() {
+              var id = d3.select(this).attr("id");
+              return color(dataset.yearly_shootings[year][id]);
+          })
 }
 
 // Draws a slider based on the data chosen.
@@ -311,7 +310,6 @@ function add_slider(width, height, pad, dataset){
       .width(width)
       .tickFormat(d3.timeFormat('%Y'))
       .on('onchange', val => {
-          console.log(val.getFullYear());
           //TODO: Refactor to have display_map runnable from here
           display_map(dataset, val.getFullYear());
       });
