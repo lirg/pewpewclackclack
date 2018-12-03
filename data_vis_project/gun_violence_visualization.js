@@ -113,8 +113,10 @@ var abbrev_to_state = {
 
 var shooting_data = {
     mass_shooting: {
+        scheme: "d3.schemeBlues[9]"
     },
     police_shooting: {
+        scheme: "d3.schemeGreens[9]"
     },
     gun_violence: {
     }
@@ -221,7 +223,7 @@ function plot_it(width, height, datasets)  {
 
 	color = d3.scaleQuantize()
 	    .domain([min, max])
-	    .range(d3.schemeBlues[9])
+	    .range(eval(shooting_data.mass_shooting.scheme));
 
 	var svg = d3.select('svg');
 
@@ -281,10 +283,12 @@ function display_map(dataset, year) {
         min = min < temp_min ? min : temp_min;
         max = max > temp_max ? max : temp_max;
     }
+    console.log(dataset.scheme);
 
     color = d3.scaleQuantize()
         .domain([min, max])
-        .range(d3.schemeBlues[9]);
+        // .range(d3.schemeBlues[9]);
+        .range(eval(dataset.scheme));
 
     d3.select("svg").selectAll('.state')
           .attr("fill", function() {
