@@ -119,6 +119,7 @@ var shooting_data = {
         scheme: "d3.schemeGreens[9]"
     },
     gun_violence: {
+        scheme: "d3.schemeReds[9]"
     }
 }
 
@@ -136,7 +137,7 @@ function graph_map(path_array) {
     Promise.all(promises).then(function(values) {
         formatData(values);
         plot_it(width, height, values);
-        add_slider(800, 600, pad, shooting_data.mass_shooting);
+        add_slider(600, 600, pad, shooting_data.mass_shooting);
     });
 }
 
@@ -144,17 +145,20 @@ async function formatCSV(path) {
 	var data = await d3.csv(path, function(d) {
 		if (d.date) {
 			// add year to data
-			var year = d.date.split("/")[2];
-            if (path.includes("police")) {
-                year = "20" + year;
+            if (path.includes("general")) {
+                d.Year = d.date.split("-")[0];
+            } else {
+    			var year = d.date.split("/")[2];
+                if (path.includes("police")) {
+                    year = "20" + year;
+                }
+    			d.Year = year;
             }
-			d.Year = year;
-
-			if (d.state.length == 2) {
-				d.state = abbrev_to_state[d.state];
-			}
-			// add fips id to data
-			d.fips = state_to_fips[d.state];
+            if (d.state.length == 2) {
+                d.state = abbrev_to_state[d.state];
+            }
+            // add fips id to data
+            d.fips = state_to_fips[d.state];
 		}
 		return d;
 	})
@@ -164,6 +168,7 @@ async function formatCSV(path) {
 function formatData(data_array){
     shooting_data.mass_shooting.data = data_array[0];
     shooting_data.police_shooting.data = data_array[1];
+    shooting_data.gun_violence.data = data_array[2];
 
     // skim data from parsed shootings data file
     for (var i = 0; i < data_array.length; i++) {
@@ -183,7 +188,6 @@ function formatData(data_array){
                 yearly_shootings[year][d] = 0;
             }
 		});
-        console.log(yearly_shootings)
 
 		map_data.forEach(function(d) {
 			shootings_count[d.fips] += 1;
@@ -196,6 +200,9 @@ function formatData(data_array){
         } else if (i == 1) {
             shooting_data.police_shooting.total_shootings = shootings_count;
             shooting_data.police_shooting.yearly_shootings = yearly_shootings;
+        } else if (i == 2){
+            shooting_data.gun_violence.total_shootings = shootings_count;
+            shooting_data.gun_violence.yearly_shootings = yearly_shootings;
         }
 
         console.log(shooting_data);
@@ -207,10 +214,6 @@ function plot_it(width, height, datasets)  {
 	var path = d3.geoPath();
 
 	// initially display mass shootings data
-	// var shootings_values = Object.values(shooting_data.mass_shooting.total_shootings);
-	// var min = Math.min(...shootings_values);
-	// var max = Math.max(...shootings_values);
-
     var min = 0;
     var max = 0;
     for (var year in shooting_data.mass_shooting.yearly_shootings) {
@@ -266,6 +269,11 @@ function plot_it(width, height, datasets)  {
 		display_map(shooting_data.police_shooting, 2015);
 	});
 
+    d3.select('#gun_violence_button').on('click', function(d) {
+        update_slider(shooting_data.gun_violence);
+        display_map(shooting_data.gun_violence, 2013);
+    });
+
 	// d3.select('#gun_violence_button').on('click', function(d) {
 	// 	display_map(shootings_dataset[3]);
 	// });
@@ -273,7 +281,6 @@ function plot_it(width, height, datasets)  {
 
 // function for updating the data views
 function display_map(dataset, year) {
-    console.log("display map called");
     var min = 0;
     var max = 0;
     for (var temp_year in dataset.yearly_shootings) {
@@ -283,11 +290,9 @@ function display_map(dataset, year) {
         min = min < temp_min ? min : temp_min;
         max = max > temp_max ? max : temp_max;
     }
-    console.log(dataset.scheme);
 
     color = d3.scaleQuantize()
         .domain([min, max])
-        // .range(d3.schemeBlues[9]);
         .range(eval(dataset.scheme));
 
     d3.select("svg").selectAll('.state')
@@ -298,13 +303,11 @@ function display_map(dataset, year) {
 }
 
 // Draws a slider based on the data chosen.
-// TODO: attach slider data, make time a scale of the time on the data.
 function add_slider(width, height, pad, dataset){
-    // console.log(map_data);
-    map_data = dataset.data;
+    var map_data = dataset.data;
     var min_year = parseInt(d3.min(map_data, d => d.Year));
     var max_year = parseInt(d3.max(map_data, d => d.Year));
-    var time_range = d3.range(0, max_year - min_year + 2).map(function (d) { return new Date(min_year + d, 0, 1);});
+    var time_range = d3.range(0, max_year - min_year + 1).map(function (d) { return new Date(min_year + d, 10, 3);});
 
     //TODO: Figure out how to throttle the slider so it doesn't refresh so often
     var slider = d3.sliderHorizontal()
@@ -314,17 +317,28 @@ function add_slider(width, height, pad, dataset){
       .width(width)
       .tickFormat(d3.timeFormat('%Y'))
       .on('onchange', val => {
-          //TODO: Refactor to have display_map runnable from here
           display_map(dataset, val.getFullYear());
       });
       // .on('onchange', _.throttle( val => {
       //     console.log(val.getFullYear())
       // }, 100));
 
+      if (time_range.length > 10) {
+          var new_time_range = []
+          for (var i = 0; i < time_range.length; i++) {
+              if (i % 3 === 0) {
+                  new_time_range.push(time_range[i]);
+              }
+          }
+          slider.tickValues(new_time_range);
+      } else {
+          slider.tickValues(time_range);
+      }
+
     d3.select("svg")
     .append("g")
     .attr("id", "slider")
-    .attr("transform", "translate(" + pad + "," + (height + pad) + ")")
+    .attr("transform", "translate(" + (pad) + "," + (height + pad) + ")")
     .call(slider);
 }
 
@@ -334,6 +348,11 @@ function update_slider(dataset) {
             return d3.select(this).attr("id") == "slider"
         })
         .remove();
-    console.log(slider);
-    add_slider(800, 600, 30, dataset);
+    if (dataset == shooting_data.mass_shooting) {
+        add_slider(600, 600, 30, dataset);
+    } else if (dataset == shooting_data.police_shooting) {
+        add_slider(200, 600, 30, dataset);
+    } else if (dataset == shooting_data.gun_violence) {
+        add_slider(200, 600, 30, dataset);
+    }
 }
