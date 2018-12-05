@@ -133,8 +133,8 @@ function graph_map(path_array) {
         formatData(values);
         plot_it(width, height, values);
         add_slider(600, 600, pad, shooting_data.mass_shooting);
-        plot_parallel_coordinates(1000, 600, 600, pad);
-        add_line_graph(shooting_data.mass_shooting);
+        plot_parallel_coordinates(1000, 600, 400, pad);
+        formatLineData(shooting_data.mass_shooting);
     });
 }
 
@@ -263,17 +263,17 @@ function plot_it(width, height, datasets)  {
 	d3.select('#mass_shooting_button').on('click', function(d) {
         update_slider(shooting_data.mass_shooting);
     		display_map(shooting_data.mass_shooting, 1969); //1969 is default value in slider
-        // add_line_graph(shooting_data.mass_shooting);
+        formatLineData(shooting_data.mass_shooting);
 	});
 	d3.select('#police_killings_button').on('click', function(d) {
         update_slider(shooting_data.police_shooting);
     		display_map(shooting_data.police_shooting, 2015);
-        // add_line_graph(shooting_data.police_shooting);
+        formatLineData(shooting_data.police_shooting);
 	});
   d3.select('#gun_violence_button').on('click', function(d) {
         update_slider(shooting_data.gun_violence);
         display_map(shooting_data.gun_violence, 2013);
-        // add_line_graph(shooting_data.gun_violence);
+        formatLineData(shooting_data.gun_violence);
   });
 }
 
@@ -281,7 +281,7 @@ function plot_it(width, height, datasets)  {
 function display_map(dataset, year) {
     var min = 0;
     var max = 0;
-    for (var temp_year in shooting_data[dataset].yearly_shootings) {
+    for (var temp_year in dataset.yearly_shootings) {
         var values = Object.values(dataset.yearly_shootings[temp_year]);
         var temp_min = Math.min(...values);
         var temp_max = Math.max(...values);
@@ -459,13 +459,13 @@ function getTimeOverlap() {
 }
 
 // TODO: implement function to show line plot details per state on hover
-function add_line_graph(dataset) {    
+function formatLineData(dataset) {    
     var line_data = {}; 
     // line_data contains fips code for each state and initialized value to empty object
     for (var state in state_to_fips) {
       line_data[state_to_fips[state]] = []
     }
-    console.log(line_data);
+    // console.log(line_data);
 
     var state_array = [];
     state_data = line_data;
@@ -478,48 +478,56 @@ function add_line_graph(dataset) {
         })
       }
     }
-    console.log(state_data);
-
-    var min_year = parseInt(d3.min(dataset.data, d => d.Year));
-    var max_year = parseInt(d3.max(dataset.data, d => d.Year));
-
-    x_scale = d3.scaleLinear()
-          .domain([min_year, max_year])
-          .range([1000, 1400]);
-
-    // d3.select('svg').selectAll('lineplot').data(line_data, (d) => d.year)
-    //   .enter().append('lineplot')
-    //   .attr('class', 'lineplot')
-    //   .attr('d', function(d) {
-    //     return d;
-    //   })
-
 }
 
 function show_line_graph(data) {
     var max_shootings = parseInt(d3.max(state_data[data.id], d => d.shootings));
 
+    var min_year = parseInt(d3.min(state_data[data.id], d => d.year));
+    var max_year = parseInt(d3.max(state_data[data.id], d => d.year));
+
+    var x_scale = d3.scaleLinear()
+          .domain([min_year, max_year])
+          .range([1000, 1400]);
+
     var y_scale = d3.scaleLinear()
           .domain([0, max_shootings])
-          .range([630, 430]);
+          .range([600, 400])
+          .nice();
 
     var line_scale = d3.line()
         .x((d) => x_scale(d.year))
         .y((d) => y_scale(d.shootings));
 
     var axis_id = 'axis' + (data.id).toString();
+    var label_id = 'label' + (data.id).toString();
+
     // x axis
     d3.select('svg').append('g')
         .attr('id', axis_id)
-        .attr('transform', 'translate('+0+','+630+')')
-        .call(d3.axisBottom(x_scale));
+        .attr('transform', 'translate('+0+','+600+')')
+        .call(d3.axisBottom(x_scale))
+        // .call(d3.axisBottom(x_scale).tickFormat(d3.timeFormat('%Y')));
+    d3.select('svg').append("text") 
+        .attr('id', label_id)            
+        .attr("transform", "translate(" + 1200 + " ," + 650 + ")")
+        .style("text-anchor", "middle")
+        .text("Year");
 
     // y axis
     d3.select('svg').append('g')
         .attr('id', axis_id)
         .attr('transform', 'translate('+1000+','+0+')')
         .call(d3.axisLeft(y_scale));
-
+    d3.select('body').select('svg').append("text")
+        .attr('id', label_id)
+        .attr("transform", "rotate(-90)")
+        .attr("y", 950)
+        .attr("x", 0-530)
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Shootings"); 
+    
     var element_id = 'line' + (data.id).toString();
     d3.select('svg').selectAll(element_id).data([state_data])
       .enter().append('path')
@@ -536,6 +544,8 @@ function show_line_graph(data) {
 function hide_line_graph(data) {
     var element_id = '#line' + (data.id).toString();
     var axis_id = '#axis' + (data.id).toString();
+    var label_id = '#label' + (data.id).toString();
     d3.select('svg').selectAll(element_id).attr('opacity', 0);
     d3.select('svg').selectAll(axis_id).remove();
+    d3.select('svg').selectAll(label_id).remove();
 }
