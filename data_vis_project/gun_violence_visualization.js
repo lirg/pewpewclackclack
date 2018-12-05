@@ -106,11 +106,6 @@ var abbrev_to_state = {
 	'WY': 'Wyoming'
 }
 
-// var shooting_type = {
-//     "mass_shooting": 0,
-//     "police_shooting": 1
-// }
-
 var shooting_data = {
     mass_shooting: {
         scheme: "d3.schemeBlues[9]"
@@ -175,9 +170,9 @@ function formatData(data_array){
         var map_data = data_array[i];
         var shootings_count = {};
         var yearly_shootings = {};
-		var fips_array = Object.values(state_to_fips);
+		    var fips_array = Object.values(state_to_fips);
         var min_year = parseInt(d3.min(map_data, d => d.Year));
-    	var max_year = parseInt(d3.max(map_data, d => d.Year));
+    	  var max_year = parseInt(d3.max(map_data, d => d.Year));
 
         for (var j = 0; j < max_year - min_year + 1; j++) {
             yearly_shootings[min_year + j] = {};
@@ -248,7 +243,12 @@ function plot_it(width, height, datasets)  {
 	  	  .attr("fill", function(d) {
               return color(shooting_data.mass_shooting.yearly_shootings[1969][d.id]);
 	  	  })
-
+        .on('mouseover', function(d) {
+          // show_line_graph(d.id);
+        })
+        .on('mouseout', function(d) {
+          // TODO: remove the line graph once mouse leaves state
+        })
 	  //.datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
 	// console.log(us.objects.states)
 	svg.append("path")
@@ -261,29 +261,26 @@ function plot_it(width, height, datasets)  {
 	// button event handlers for switching data views
 	d3.select('#mass_shooting_button').on('click', function(d) {
         update_slider(shooting_data.mass_shooting);
-		display_map(shooting_data.mass_shooting, 1969); //1969 is default value in slider
-	});
+    		display_map(shooting_data.mass_shooting, 1969); //1969 is default value in slider
+    		// display_map('mass_shooting', 1969);
 
+	});
 	d3.select('#police_killings_button').on('click', function(d) {
         update_slider(shooting_data.police_shooting);
-		display_map(shooting_data.police_shooting, 2015);
+    		// display_map(shooting_data.police_shooting, 2015);
+    		// display_map('police_shooting', 2015);
 	});
-
-    d3.select('#gun_violence_button').on('click', function(d) {
+  d3.select('#gun_violence_button').on('click', function(d) {
         update_slider(shooting_data.gun_violence);
         display_map(shooting_data.gun_violence, 2013);
-    });
-
-	// d3.select('#gun_violence_button').on('click', function(d) {
-	// 	display_map(shootings_dataset[3]);
-	// });
+  });
 }
 
 // function for updating the data views
 function display_map(dataset, year) {
     var min = 0;
     var max = 0;
-    for (var temp_year in dataset.yearly_shootings) {
+    for (var temp_year in shooting_data[dataset].yearly_shootings) {
         var values = Object.values(dataset.yearly_shootings[temp_year]);
         var temp_min = Math.min(...values);
         var temp_max = Math.max(...values);
@@ -355,4 +352,63 @@ function update_slider(dataset) {
     } else if (dataset == shooting_data.gun_violence) {
         add_slider(200, 600, 30, dataset);
     }
+}
+
+// TODO: implement function to show line plot details per state on hover
+function add_line_graph(dataset) {    
+    var line_data = {}; 
+    // line_data contains fips code for each state and initialized value to empty object
+    for (var state in state_to_fips) {
+      line_data[state_to_fips[state]] = {}
+    }
+
+    shooting_data[dataset].yearly_shootings.forEach((year) => {
+      line_data[year] = year[state_id];
+    });
+    var min_year = parseInt(d3.min(shooting_data[dataset].data, d => d.Year));
+    var max_year = parseInt(d3.max(shooting_data[dataset].data, d => d.Year));
+    var min_shootings = d3.min(line_data, d => d.year);
+    var max_shootings = d3.max(line_data, d => d.year);
+
+    x_scale = d3.scaleTime()
+          .domain([min_year, max_year])
+          .range([1030, 1230]);
+    y_scale = d3.scaleLinear()
+          .domain([min_shootings, max_shootings])
+          .range([430, 630]);
+
+    line_scale = d3.line()
+        .x((d) => x_scale(d.year))
+        // .y((d) => y_scale(d.year));
+
+    svg.selectAll('lineplot').data(line_data, (d) => d.year)
+      .enter().append('lineplot')
+      .attr('class', 'lineplot')
+      .attr('d', function(d) {
+        return d;
+      })
+
+}
+
+function show_line_graph(data) {
+    var line_data = {}; 
+    // line_data contains fips code for each state and initialized value to empty object
+    for (var state in state_to_fips) {
+      line_data[state_to_fips[state]] = {}
+    }
+
+    var state_id = data.id;
+    for (var year in shooting_data[dataset].yearly_shootings) {
+      line_data[state_id] = {
+        year: { state_id: year[state_id] }
+      };
+    }
+    console.log(line_data);
+
+    svg.selectAll('lineplot').data(line_data, (d) => d.year)
+      .enter().append('lineplot')
+      .attr('class', 'lineplot')
+      .attr('d', function(d) {
+        return d;
+      })
 }
