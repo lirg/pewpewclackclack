@@ -125,19 +125,20 @@ var shooting_data = {
 
 function graph_map(path_array) {
 	var width = 1960;
-	var height = 1000;
-	var pad = 30
-	d3.select('body').append('svg').attr('width', width).attr('height', height)
+	var height = 680;
+	var pad = 30;
+	d3.select('body').append('svg').attr('width', width).attr('height', height);
 
     var promises = [];
     path_array.forEach(function(path) {
-        promises.push(formatCSV(path))
+        promises.push(formatCSV(path));
     });
 
     Promise.all(promises).then(function(values) {
         formatData(values);
         plot_it(width, height, values);
         add_slider(600, 600, pad, shooting_data.mass_shooting);
+        plot_parallel_coordinates(1000, 600, 600, pad);
     });
 }
 
@@ -355,4 +356,110 @@ function update_slider(dataset) {
     } else if (dataset == shooting_data.gun_violence) {
         add_slider(200, 600, 30, dataset);
     }
+}
+
+function plot_parallel_coordinates(map_width, pc_width, height, pad) {
+	d3.select('svg').append('g').attr('transform', 'translate('+map_width+pad+','+pad+')').attr('class', 'parallel_coordinates');
+    var selected_atts = Object.keys(shooting_data);
+    var timeOverlap = getTimeOverlap();
+
+	// setup x_scale
+	var x_scale = d3.scaleBand().domain(selected_atts).range([map_width, map_width + pc_width - pad]);
+	// setup y_scales for each category
+	var categories_y_scales = [];
+	for (var i = 0; i < selected_atts.length; i++) {
+        var min = Number.MAX_SAFE_INTEGER;
+        var max = 0;
+        for (var j = 0; j < timeOverlap.length; j++) {
+            // Get all state shooting counts in a year and sum them up
+            var all_state_yearly_shootings = Object.values(shooting_data[selected_atts[i]].yearly_shootings[timeOverlap[j]]);
+            var sum = 0;
+            all_state_yearly_shootings.forEach(function(d) {
+                sum += d;
+            });
+            // Compare to all other years' total shootings
+            min = min < sum ? min : sum;
+            max = max > sum ? max : sum;
+        }
+		categories_y_scales.push(
+			d3.scaleLinear().domain([max,min]).range([pad, height - pad])
+		);
+	}
+
+    var pc_data = [];
+    for (var i = 0; i < timeOverlap.length; i++) {
+        var temp_obj = {};
+        temp_obj.year = timeOverlap[i];
+        for (var j = 0; j < selected_atts.length; j++) {
+            var all_state_yearly_shootings = Object.values(shooting_data[selected_atts[j]].yearly_shootings[timeOverlap[i]]);
+            var sum = 0;
+            all_state_yearly_shootings.forEach(function(d) {
+                sum += d;
+            });
+            temp_obj[selected_atts[j]] = sum;
+        }
+        pc_data.push(temp_obj);
+    }
+
+    console.log(pc_data);
+	setUpPCAxes(map_width, height, pad, x_scale, categories_y_scales);
+	graphPC(pc_data, selected_atts, x_scale, categories_y_scales);
+}
+
+function setUpPCAxes(map_width, height, pad, x_scale, categories_y_scales) {
+	var bandwidth = x_scale.bandwidth();
+	// x-axis
+	d3.select('svg').append('g')
+		.attr('id', 'pc_bottomaxis')
+		.attr('transform', 'translate('+ 0 +','+(height - pad)+')')
+		.call(d3.axisBottom(x_scale).tickSize(0));
+
+	d3.select('svg').append('g')
+		.attr('id', 'pc_topaxis')
+		.attr('transform', 'translate('+ 0 +','+(pad)+')')
+		.call(d3.axisTop(x_scale).tickSize(0));
+
+	// y-axes
+	for (var i = 0; i < categories_y_scales.length; i++) {
+		d3.select('svg').append('g')
+			.attr('class', 'pc_leftaxis')
+			.attr('transform', 'translate('+ ((map_width + bandwidth / 2) + (i * bandwidth))+','+0+')')
+			.call(d3.axisLeft(categories_y_scales[i]));
+	}
+}
+// plot the poly-lines
+function graphPC(pc_data, selected_atts, x_scale, categories_y_scales) {
+	var line = d3.line();
+
+	var path = d3.select('svg').append("g")
+    .attr("class", "foreground")
+    .selectAll("path")
+    .data(pc_data)
+    .enter();
+
+    path.append("path")
+    .attr("class", 'pc_path')
+	.attr('key', d => d.year)
+	.attr('d', function(d) {
+        console.log(d);
+		return line(selected_atts.map(function(p, i) {
+			// console.log([x_scale(p), categories_y_scales[i](d.value[p])]);
+			return [x_scale(p), categories_y_scales[i](d[p])];}))
+	})
+	.attr('stroke', 'blue')
+	.attr('fill', 'none')
+	.attr('opacity', 0.25)
+	.attr('transform', 'translate('+(x_scale.bandwidth() / 2)+','+0+')');
+}
+
+function getTimeOverlap() {
+    var range_mass = Object.keys(shooting_data.mass_shooting.yearly_shootings);
+    var range_police = Object.keys(shooting_data.police_shooting.yearly_shootings);
+    var range_gun = Object.keys(shooting_data.gun_violence.yearly_shootings);
+
+    var filtered1 = range_mass.filter(value => -1 !== range_police.indexOf(value));
+    var filtered2 = filtered1.filter(value => -1 !== range_gun.indexOf(value));
+    console.log(filtered2);
+
+    return filtered2;
 }
