@@ -246,11 +246,7 @@ function plot_it(width, height, datasets)  {
               return color(shooting_data.mass_shooting.yearly_shootings[1969][d.id]);
 	  	  })
         .on('mouseover', show_line_graph)
-        .on('mouseout', function(d) {
-          // TODO: remove the line graph once mouse leaves state
-          hide_line_graph(d);
-          console.log('mouse left');
-        })
+        .on('mouseout',  hide_line_graph)
 
 	svg.append("path")
 	  .datum(topojson.mesh(us, us.objects.states))
