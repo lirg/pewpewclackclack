@@ -367,35 +367,45 @@ function plot_parallel_coordinates(map_width, pc_width, height, pad) {
         for (var j = 0; j < timeOverlap.length; j++) {
             // Get all state shooting counts in a year and sum them up
             var all_state_yearly_shootings = Object.values(shooting_data[selected_atts[i]].yearly_shootings[timeOverlap[j]]);
-            var sum = 0;
             all_state_yearly_shootings.forEach(function(d) {
-                sum += d;
+                // Compare to all other states' and years' shootings
+                min = min < d ? min : d;
+                max = max > d ? max : d;
             });
-            // Compare to all other years' total shootings
-            min = min < sum ? min : sum;
-            max = max > sum ? max : sum;
         }
 		categories_y_scales.push(
 			d3.scaleLinear().domain([max,min]).range([pad, height - pad])
 		);
 	}
+    //
+    // var pc_data = [];
+    // for (var i = 0; i < timeOverlap.length; i++) {
+    //     var temp_obj = {};
+    //     temp_obj.year = timeOverlap[i];
+    //     for (var j = 0; j < selected_atts.length; j++) {
+    //         temp_obj[selected_atts[j]] = {};
+    //         // console.log(shooting_data[selected_atts[j]].yearly_shootings[timeOverlap[i]]);
+    //         for (var key in shooting_data[selected_atts[j]].yearly_shootings[timeOverlap[i]]) {
+    //             temp_obj[selected_atts[j]][key] = shooting_data[selected_atts[j]].yearly_shootings[timeOverlap[i]][key]
+    //         }
+    //     }
+    //     pc_data.push(temp_obj);
+    // }
 
     var pc_data = [];
     for (var i = 0; i < timeOverlap.length; i++) {
         var temp_obj = {};
         temp_obj.year = timeOverlap[i];
-        for (var j = 0; j < selected_atts.length; j++) {
-            var all_state_yearly_shootings = Object.values(shooting_data[selected_atts[j]].yearly_shootings[timeOverlap[i]]);
-            var sum = 0;
-            all_state_yearly_shootings.forEach(function(d) {
-                sum += d;
-            });
-            temp_obj[selected_atts[j]] = sum;
+        for (var state in shooting_data[selected_atts[0]].yearly_shootings[timeOverlap[i]]) {
+            temp_obj[state] = {}
+            for (var j = 0; j < selected_atts.length; j++) {
+                temp_obj[state][selected_atts[j]] = shooting_data[selected_atts[j]].yearly_shootings[timeOverlap[i]][state]
+            }
         }
         pc_data.push(temp_obj);
     }
 
-    // console.log(pc_data);
+    console.log(pc_data);
 	setUpPCAxes(map_width, height, pad, x_scale, categories_y_scales);
 	graphPC(pc_data, selected_atts, x_scale, categories_y_scales);
 }
@@ -431,20 +441,26 @@ function graphPC(pc_data, selected_atts, x_scale, categories_y_scales) {
     .data(pc_data)
     .enter();
 
-    path.append("path")
-    .attr("class", 'pc_path')
-	.attr('key', d => d.year)
-	.attr('d', function(d) {
-        // console.log(d);
-		return line(selected_atts.map(function(p, i) {
-			// console.log([x_scale(p), categories_y_scales[i](d.value[p])]);
-			return [x_scale(p), categories_y_scales[i](d[p])];}))
-	})
-	.attr('stroke', 'blue')
-	.attr('fill', 'none')
-	.attr('opacity', 0.25)
-	.attr('transform', 'translate('+(x_scale.bandwidth() / 2)+','+0+')');
-}
+    for (var state in pc_data[0]) {
+        if (state !== "year") {
+            path.append("path")
+            .attr("class", 'pc_path')
+        	.attr('key', d => d.year)
+        	.attr('d', function(d) {
+                console.log(d);
+                var path_array = [];
+                for (var type in d[state]) {
+                    path_array.push([x_scale(type), categories_y_scales[selected_atts.indexOf(type)](d[state][type])]);
+                }
+                return line(path_array);
+            })
+            .attr('stroke', 'blue')
+            .attr('fill', 'none')
+            .attr('opacity', 0.25)
+            .attr('transform', 'translate('+(x_scale.bandwidth() / 2)+','+0+')');
+            }
+        }
+    }
 
 function getTimeOverlap() {
     var range_mass = Object.keys(shooting_data.mass_shooting.yearly_shootings);
@@ -459,8 +475,8 @@ function getTimeOverlap() {
 }
 
 // TODO: implement function to show line plot details per state on hover
-function formatLineData(dataset) {    
-    var line_data = {}; 
+function formatLineData(dataset) {
+    var line_data = {};
     // line_data contains fips code for each state and initialized value to empty object
     for (var state in state_to_fips) {
       line_data[state_to_fips[state]] = []
@@ -508,8 +524,8 @@ function show_line_graph(data) {
         .attr('transform', 'translate('+0+','+600+')')
         .call(d3.axisBottom(x_scale))
         // .call(d3.axisBottom(x_scale).tickFormat(d3.timeFormat('%Y')));
-    d3.select('svg').append("text") 
-        .attr('id', label_id)            
+    d3.select('svg').append("text")
+        .attr('id', label_id)
         .attr("transform", "translate(" + 1200 + " ," + 650 + ")")
         .style("text-anchor", "middle")
         .text("Year");
@@ -526,8 +542,8 @@ function show_line_graph(data) {
         .attr("x", 0-530)
         .attr("dy", "1em")
         .style("text-anchor", "middle")
-        .text("Shootings"); 
-    
+        .text("Shootings");
+
     var element_id = 'line' + (data.id).toString();
     d3.select('svg').selectAll(element_id).data([state_data])
       .enter().append('path')
