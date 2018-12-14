@@ -306,6 +306,7 @@ function add_slider(width, height, pad, dataset){
     var min_year = parseInt(d3.min(map_data, d => d.Year));
     var max_year = parseInt(d3.max(map_data, d => d.Year));
     var time_range = d3.range(0, max_year - min_year + 1).map(function (d) { return new Date(min_year + d, 10, 3);});
+    var timeOverlap = getTimeOverlap();
 
     //TODO: Figure out how to throttle the slider so it doesn't refresh so often
     var slider = d3.sliderHorizontal()
@@ -315,7 +316,15 @@ function add_slider(width, height, pad, dataset){
       .width(width)
       .tickFormat(d3.timeFormat('%Y'))
       .on('onchange', val => {
-          display_map(dataset, val.getFullYear());
+          var cur_year = val.getFullYear();
+          display_map(dataset, cur_year);
+          d3.selectAll(".pc_path").attr('opacity', .25);
+          if (timeOverlap.includes(cur_year.toString())) {
+              d3.selectAll(".pc_path")
+                .filter(function(d) {
+                    return d3.select(this).attr("key") == cur_year;
+              }).attr('opacity', 1);
+          }
       });
 
       if (time_range.length > 10) {
@@ -446,8 +455,8 @@ function graphPC(pc_data, selected_atts, x_scale, categories_y_scales) {
             path.append("path")
             .attr("class", 'pc_path')
         	.attr('key', d => d.year)
+            .attr('state', state)
         	.attr('d', function(d) {
-                console.log(d);
                 var path_array = [];
                 for (var type in d[state]) {
                     path_array.push([x_scale(type), categories_y_scales[selected_atts.indexOf(type)](d[state][type])]);
@@ -456,7 +465,7 @@ function graphPC(pc_data, selected_atts, x_scale, categories_y_scales) {
             })
             .attr('stroke', 'blue')
             .attr('fill', 'none')
-            .attr('opacity', 0.25)
+            .attr('opacity', .1)
             .attr('transform', 'translate('+(x_scale.bandwidth() / 2)+','+0+')');
             }
         }
