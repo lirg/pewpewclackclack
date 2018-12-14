@@ -249,7 +249,6 @@ function plot_it(width, height, datasets)  {
         .on('mouseout', function(d) {
           // TODO: remove the line graph once mouse leaves state
           hide_line_graph(d);
-          console.log('mouse left');
         })
 
 	svg.append("path")
@@ -318,12 +317,12 @@ function add_slider(width, height, pad, dataset){
       .on('onchange', val => {
           var cur_year = val.getFullYear();
           display_map(dataset, cur_year);
-          d3.selectAll(".pc_path").attr('opacity', .25);
+          d3.selectAll(".pc_path").attr('opacity', .1);
           if (timeOverlap.includes(cur_year.toString())) {
               d3.selectAll(".pc_path")
                 .filter(function(d) {
                     return d3.select(this).attr("key") == cur_year;
-              }).attr('opacity', 1);
+              }).attr('opacity', .5);
           }
       });
 
@@ -386,20 +385,6 @@ function plot_parallel_coordinates(map_width, pc_width, height, pad) {
 			d3.scaleLinear().domain([max,min]).range([pad, height - pad])
 		);
 	}
-    //
-    // var pc_data = [];
-    // for (var i = 0; i < timeOverlap.length; i++) {
-    //     var temp_obj = {};
-    //     temp_obj.year = timeOverlap[i];
-    //     for (var j = 0; j < selected_atts.length; j++) {
-    //         temp_obj[selected_atts[j]] = {};
-    //         // console.log(shooting_data[selected_atts[j]].yearly_shootings[timeOverlap[i]]);
-    //         for (var key in shooting_data[selected_atts[j]].yearly_shootings[timeOverlap[i]]) {
-    //             temp_obj[selected_atts[j]][key] = shooting_data[selected_atts[j]].yearly_shootings[timeOverlap[i]][key]
-    //         }
-    //     }
-    //     pc_data.push(temp_obj);
-    // }
 
     var pc_data = [];
     for (var i = 0; i < timeOverlap.length; i++) {
@@ -478,12 +463,10 @@ function getTimeOverlap() {
 
     var filtered1 = range_mass.filter(value => -1 !== range_police.indexOf(value));
     var filtered2 = filtered1.filter(value => -1 !== range_gun.indexOf(value));
-    // console.log(filtered2);
 
     return filtered2;
 }
 
-// TODO: implement function to show line plot details per state on hover
 function formatLineData(dataset) {
     var line_data = {};
     // line_data contains fips code for each state and initialized value to empty object
@@ -563,7 +546,9 @@ function show_line_graph(data) {
       })
       .attr('fill', 'none')
       .attr('stroke', 'red')
-      .attr('opacity', 1)
+      .attr('opacity', 1);
+
+    maybeShowSinglePCLine(data.id);
 }
 
 function hide_line_graph(data) {
@@ -573,4 +558,27 @@ function hide_line_graph(data) {
     d3.select('svg').selectAll(element_id).attr('opacity', 0);
     d3.select('svg').selectAll(axis_id).remove();
     d3.select('svg').selectAll(label_id).remove();
+    maybeHideSinglePCLine(data.id);
+}
+
+function maybeShowSinglePCLine(state_id) {
+    var selection =
+        d3.selectAll(".pc_path").filter(function(d) {
+            return d3.select(this).attr("opacity") == .5;
+        })
+    if (!selection.empty()) {
+        selection.filter(function(d) {
+            return d3.select(this).attr('state') == state_id;
+        }).attr("stroke", 'red').attr("opacity", 1);
+    }
+}
+
+function maybeHideSinglePCLine(state_id) {
+    var selection =
+        d3.selectAll(".pc_path").filter(function(d) {
+            return d3.select(this).attr("stroke") == "red";
+        })
+    if (!selection.empty()) {
+        selection.attr("stroke", "blue").attr("opacity", .5);
+    }
 }
